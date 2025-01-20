@@ -97,7 +97,15 @@
 
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                updateChartData(data);
+
+                if (data.action === 'timeframe_updated') {
+                    console.log('Timeframe updated to:', data.timeframe);
+                }
+
+                // Handle other actions, like chart data update
+                if (data.time) {
+                    updateChartData(data);
+                }
             };
 
             ws.onclose = () => {
@@ -107,6 +115,21 @@
             ws.onerror = (error) => {
                 console.error('WebSocket error:', error);
             };
+
+            // Listen for changes to the timeframe select element
+            const timeframeSelect = document.getElementById('timeframe');
+            timeframeSelect.addEventListener('change', (event) => {
+                const selectedTimeframe = event.target.value;
+
+                // Send the selected timeframe to the WebSocket server
+                if (ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({
+                        action: 'update_timeframe',
+                        timeframe: selectedTimeframe
+                    }));
+                    console.log('Timeframe updated:', selectedTimeframe);
+                }
+            });
         });
     </script>
 </body>
