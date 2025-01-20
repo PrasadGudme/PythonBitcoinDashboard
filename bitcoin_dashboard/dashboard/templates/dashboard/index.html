@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitcoin OHLCV Chart</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css">
+    <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+    <style>
+        #chart-container {
+            width: 100%;
+            height: 500px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body class="p-3">
+    <div class="container">
+        <h1>Bitcoin OHLCV Chart</h1>
+        <form method="GET" class="row g-3">
+            <div class="col-md-6">
+                <label for="exchange" class="form-label">Select Exchange</label>
+                <select name="exchange" id="exchange" class="form-select">
+                    {% for exchange in exchanges %}
+                        <option value="{{ exchange }}" {% if exchange == selected_exchange %}selected{% endif %}>{{ exchange }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-6">
+                <label for="timeframe" class="form-label">Select Timeframe</label>
+                <select name="timeframe" id="timeframe" class="form-select">
+                    {% for timeframe in timeframes %}
+                        <option value="{{ timeframe }}" {% if timeframe == selected_timeframe %}selected{% endif %}>{{ timeframe }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-12">
+                <button type="submit" class="btn btn-primary">Update Chart</button>
+            </div>
+        </form>
+
+        <!-- Chart Container -->
+        <div id="chart-container"></div>
+    </div>
+
+    <!-- Embed Chart Data -->
+    <script id="chart-data" type="application/json">
+        {{ chart_data|safe }}
+    </script>
+
+    <script>
+        // Parse Chart Data
+        const chartData = JSON.parse(document.getElementById('chart-data').textContent || "[]");
+
+        console.log("Parsed Chart Data:", chartData); // Debugging step
+
+        // Initialize Lightweight Charts
+        let chart = null;
+        let candlestickSeries = null;
+
+        function initializeChart() {
+            const chartContainer = document.getElementById('chart-container');
+            chartContainer.innerHTML = ''; // Clear previous chart
+
+            chart = LightweightCharts.createChart(chartContainer, {
+                layout: {
+                    backgroundColor: '#ffffff',
+                    textColor: '#000',
+                },
+                width: chartContainer.offsetWidth,
+                height: chartContainer.offsetHeight,
+                grid: {
+                    vertLines: { color: '#eee' },
+                    horzLines: { color: '#eee' },
+                },
+            });
+
+            candlestickSeries = chart.addCandlestickSeries();
+            candlestickSeries.setData(chartData);
+        }
+
+        function updateChartData(newData) {
+            if (candlestickSeries) {
+                candlestickSeries.update(newData);
+                console.log("Chart updated with new data:", newData); // Debugging step
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeChart();
+
+            const ws = new WebSocket('ws://' + window.location.host + '/ws/chart/');
+
+            ws.onopen = () => {
+                console.log('WebSocket connection opened.');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                updateChartData(data);
+            };
+
+            ws.onclose = () => {
+                console.error('WebSocket connection closed.');
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        });
+    </script>
+</body>
+</html>
