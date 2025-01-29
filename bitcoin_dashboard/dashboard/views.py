@@ -4,7 +4,7 @@ import ccxt
 import pandas as pd
 
 # Fetch OHLCV data from exchange
-def fetch_ohlcv(exchange_name, symbol, timeframe, limit=500):
+def fetch_ohlcv(exchange_name, symbol, timeframe, limit=100000000):
     try:
         exchange_class = getattr(ccxt, exchange_name)
         exchange = exchange_class({'rateLimit': 1200, 'enableRateLimit': True})
@@ -33,7 +33,7 @@ def prepare_chart_data(df):
 # Handle the rendering of the chart page
 def index(request):
     exchanges = ['binance', 'coinbasepro', 'kraken']
-    timeframes = ['1m', '5m', '15m', '30m', '45m', '1h', '4h', '1d', '1w']
+    timeframes = ['1s', '1m', '5m', '15m', '30m', '45m', '1h', '4h', '1d', '1w']
 
     selected_exchange = request.GET.get('exchange', 'binance')
     selected_timeframe = request.GET.get('timeframe', '1h')
