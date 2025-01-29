@@ -11,7 +11,7 @@ class ChartConsumer(AsyncWebsocketConsumer):
         # Initialize exchange details
         self.exchange = 'binance'
         self.symbol = 'BTC/USDT'
-        self.timeframe = '1m'  # Default timeframe
+        self.timeframe = '1s'  # Default timeframe
 
         # Start the real-time data task
         self.fetch_task = asyncio.create_task(self.send_realtime_data())
@@ -51,7 +51,7 @@ class ChartConsumer(AsyncWebsocketConsumer):
         while True:
             try:
                 # Fetch the latest OHLCV data based on the current timeframe
-                ohlcv = exchange.fetch_ohlcv(self.symbol, timeframe=self.timeframe, limit=500)
+                ohlcv = exchange.fetch_ohlcv(self.symbol, timeframe=self.timeframe, limit=1)
                 if ohlcv:
                     latest = ohlcv[-1]
                     data = {
